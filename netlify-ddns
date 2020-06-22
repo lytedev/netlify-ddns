@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+command -v jq &>/dev/null || { echo "jq is not installed"; exit 4; }
+command -v curl &>/dev/null || { echo "curl is not installed"; exit 5; }
+
+[ -f /etc/netlify-ddns.env ] && source /etc/netlify-ddns.env
+[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/netlify-ddns/rc" ] && \
+	source "${XDG_CONFIG_HOME:-$HOME/.config}/netlify-ddns/rc"
+[ -f .env ] && source .env
+[ -z $SUBDOMAINS ] && { echo "SUBDOMAINS environment variable not set"; exit 1; }
+[ -z $ACCESS_TOKEN ] && { echo "ACCESS_TOKEN environment variable not set"; exit 2; }
+[ -z $DOMAIN ] && { echo "DOMAIN environment variable not set"; exit 3; }
+
+# options
+TTL="${TTL:-120}"
+
+# constants
+DNS_ZONE="$(<<< "$DOMAIN" tr "." "_")"
+API="https://api.netlify.com/api/v1"
+URL="$API/dns_zones/$DNS_ZONE/dns_records?access_token=$ACCESS_TOKEN" 
+
+# setup
+CURL_FLAGS="-sL"
+curl="curl $CURL_FLAGS"
+
+# fetch IP addresses
+MY_IPV4="$($curl -4 ifconfig.io)"
+MY_IPV6="$($curl -6 ifconfig.io)"
+
+# fetch current netlify DNS state
+CURRENT_DNS_JSON="$(curl -sL "$URL" | jq -r 'map(select(.type == "A" or .type == "AAAA"))')"
+jsq() {
+	<<< "$CURRENT_DNS_JSON" jq "$@"
+}
+
+delete_netlify_dns_record_by_subdomain_if_exists() {
+	SUBDOMAIN="$1"; shift
+	if jsq -e "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\"))[0]" > /dev/null; then
+		RECORD_ID="$(jsq -r "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\"))[0].id")"
+		$curl -X DELETE "$API/dns_zones/$DNS_ZONE/dns_records/$RECORD_ID?access_token=$ACCESS_TOKEN" > /dev/null
+	fi
+}
+
+create_netlify_dns_record() {
+	SUBDOMAIN="$1"; shift
+	PAYLOAD="$(jq -n -r \
+		--arg type "A" \
+		--arg name "$SUBDOMAIN" \
+		--arg val  "$MY_IPV4" \
+		--arg ttl  "$TTL" \
+		'{type:$type,hostname:$name,value:$val,ttl:$ttl}')"
+	<<< "$PAYLOAD" $curl -d @- -H 'content-type:application/json' "$API/dns_zones/$DNS_ZONE/dns_records?access_token=$ACCESS_TOKEN" > /dev/null
+}
+
+setup_netlify_dns_record() {
+	SUBDOMAIN="$1"; shift
+	echo "Setting up $SUBDOMAIN.$DOMAIN"
+	delete_netlify_dns_record_by_subdomain_if_exists "$SUBDOMAIN"
+	create_netlify_dns_record "$SUBDOMAIN" && echo "Done setting up $SUBDOMAIN.$DOMAIN"
+}
+
+for s in "${SUBDOMAINS[@]}"; do
+	# TODO: this could get cloggy if there are a lot of subdomains
+	setup_netlify_dns_record "$s" &
+done
+echo "Waiting for jobs to finish..."
+wait
+
+# jsq 'map(.hostname)'

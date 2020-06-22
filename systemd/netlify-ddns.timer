@@ -1,0 +1,10 @@
+[Unit]
+Description=Run netlify-ddns every 5 minutes and on boot
+After=network-online.service
+
+[Timer]
+OnBootSec=1sec
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

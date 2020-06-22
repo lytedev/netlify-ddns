@@ -1,0 +1,7 @@
+[Unit]
+Description=Setup DNS entries with Netlify for the configured domain's hostnames with the current machine's public IP address
+After=network-online.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env bash %h/.local/bin/netlify-ddns
