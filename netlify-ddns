@@ -7,9 +7,9 @@ command -v curl &>/dev/null || { echo "curl is not installed"; exit 5; }
 [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/netlify-ddns/rc" ] && \
 	source "${XDG_CONFIG_HOME:-$HOME/.config}/netlify-ddns/rc"
 [ -f .env ] && source .env
-[ -z $SUBDOMAINS ] && { echo "SUBDOMAINS environment variable not set"; exit 1; }
-[ -z $ACCESS_TOKEN ] && { echo "ACCESS_TOKEN environment variable not set"; exit 2; }
-[ -z $DOMAIN ] && { echo "DOMAIN environment variable not set"; exit 3; }
+[ -z "$SUBDOMAINS" ] && { echo "SUBDOMAINS environment variable not set"; exit 1; }
+[ -z "$ACCESS_TOKEN" ] && { echo "ACCESS_TOKEN environment variable not set"; exit 2; }
+[ -z "$DOMAIN" ] && { echo "DOMAIN environment variable not set"; exit 3; }
 
 # options
 TTL="${TTL:-120}"
@@ -25,7 +25,8 @@ curl="curl $CURL_FLAGS"
 
 # fetch IP addresses
 MY_IPV4="$($curl -4 ifconfig.io)"
-MY_IPV6="$($curl -6 ifconfig.io)"
+# TODO: ipv6
+# MY_IPV6="$($curl -6 ifconfig.io)"
 
 # fetch current netlify DNS state
 CURRENT_DNS_JSON="$(curl -sL "$URL" | jq -r 'map(select(.type == "A" or .type == "AAAA"))')"
