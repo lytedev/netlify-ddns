@@ -18,3 +18,13 @@ install-user-timer: .env netlify-ddns
 	@systemctl --user start netlify-ddns.timer
 	@echo "Your netlify-ddns configuration is now available at:"
 	@echo "  ${XDG_CONFIG_HOME}/netlify-ddns/rc"
+
+.PHONY: uninstall-user-timer
+uninstall-user-timer:
+	@systemctl --user disable netlify-ddns.timer
+	@systemctl --user stop netlify-ddns.timer
+	@rm -f \
+		~/.local/bin/netlify-ddns \
+		${XDG_CONFIG_HOME}/netlify-ddns/rc \
+		~/.config/systemd/user/netlify-ddns.service \
+		~/.config/systemd/user/netlify-ddns.timer
