@@ -9,7 +9,7 @@ their [provided API][netlify-api].
 + curl
 + jq
 
-## Usage
+## Basic Usage
 
 Just run `make` to configure (if your first time) and run.
 
