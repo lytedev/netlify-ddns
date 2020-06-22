@@ -12,7 +12,7 @@ command -v curl &>/dev/null || { echo "curl is not installed"; exit 5; }
 [ -z "$DOMAIN" ] && { echo "DOMAIN environment variable not set"; exit 3; }
 
 # options
-TTL="${TTL:-120}"
+TTL_SECONDS="${TTL_SECONDS:-120}"
 
 # constants
 DNS_ZONE="$(<<< "$DOMAIN" tr "." "_")"
@@ -48,7 +48,7 @@ create_netlify_dns_record() {
 		--arg type "A" \
 		--arg name "$SUBDOMAIN" \
 		--arg val  "$MY_IPV4" \
-		--arg ttl  "$TTL" \
+		--arg ttl  "$TTL_SECONDS" \
 		'{type:$type,hostname:$name,value:$val,ttl:$ttl}')"
 	<<< "$PAYLOAD" $curl -d @- -H 'content-type:application/json' "$API/dns_zones/$DNS_ZONE/dns_records?access_token=$ACCESS_TOKEN" > /dev/null
 }
