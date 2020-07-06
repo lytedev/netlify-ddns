@@ -10,6 +10,8 @@ run: .env netlify-ddns ; ./netlify-ddns
 .PHONY: install-user-timer
 install-user-timer: .env netlify-ddns
 	@mkdir -p ${XDG_CONFIG_HOME}/netlify-ddns/
+	@mkdir -p ~/.local/bin/
+	@mkdir -p ~/.config/systemd/user/
 	@install -m 744 netlify-ddns ~/.local/bin/netlify-ddns
 	@install -m 700 .env ${XDG_CONFIG_HOME}/netlify-ddns/rc
 	@install -m 644 systemd/netlify-ddns.service ~/.config/systemd/user/netlify-ddns.service
