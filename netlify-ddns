@@ -24,7 +24,9 @@ CURL_FLAGS="-sL"
 curl="curl $CURL_FLAGS"
 
 # fetch IP addresses
-MY_IPV4="$($curl -4 ifconfig.io)"
+MY_IPV4="$($curl -4 ifconfig.io)" || \
+	{ echo "Failed to retrieve an IPv4 address from ifconfig.io"; exit 4; }
+
 # TODO: ipv6
 # MY_IPV6="$($curl -6 ifconfig.io)"
 
@@ -60,6 +62,7 @@ setup_netlify_dns_record() {
 	create_netlify_dns_record "$SUBDOMAIN" && echo "Done setting up $SUBDOMAIN.$DOMAIN"
 }
 
+echo "According to ifconfig.io, my IPv4 address is: $MY_IPV4"
 for s in "${SUBDOMAINS[@]}"; do
 	# TODO: this could get cloggy if there are a lot of subdomains
 	setup_netlify_dns_record "$s" &
