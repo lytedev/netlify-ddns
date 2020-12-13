@@ -17,7 +17,7 @@ TTL_SECONDS="${TTL_SECONDS:-120}"
 # constants
 DNS_ZONE="$(<<< "$DOMAIN" tr "." "_")"
 API="https://api.netlify.com/api/v1"
-URL="$API/dns_zones/$DNS_ZONE/dns_records?access_token=$ACCESS_TOKEN"
+URL="$API/dns_zones/$DNS_ZONE/dns_records?access_token=$ACCESS_TOKEN" 
 
 # setup
 CURL_FLAGS="-sL"
@@ -25,7 +25,7 @@ curl="curl $CURL_FLAGS"
 
 # fetch IP addresses
 MY_IPV4="$($curl -4 ifconfig.io)" || \
-	{ echo "Failed to retrieve an IPv4 address from ifconfig.io"; exit 6; }
+	{ echo "Failed to retrieve an IPv4 address from ifconfig.io"; exit 4; }
 
 # TODO: ipv6
 # MY_IPV6="$($curl -6 ifconfig.io)"
