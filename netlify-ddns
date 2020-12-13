@@ -17,7 +17,7 @@ TTL_SECONDS="${TTL_SECONDS:-120}"
 # constants
 DNS_ZONE="$(<<< "$DOMAIN" tr "." "_")"
 API="https://api.netlify.com/api/v1"
-URL="$API/dns_zones/$DNS_ZONE/dns_records?access_token=$ACCESS_TOKEN" 
+URL="$API/dns_zones/$DNS_ZONE/dns_records?access_token=$ACCESS_TOKEN"
 
 # setup
 CURL_FLAGS="-sL"
@@ -57,9 +57,14 @@ create_netlify_dns_record() {
 
 setup_netlify_dns_record() {
 	SUBDOMAIN="$1"; shift
-	echo "Setting up $SUBDOMAIN.$DOMAIN"
-	delete_netlify_dns_record_by_subdomain_if_exists "$SUBDOMAIN"
-	create_netlify_dns_record "$SUBDOMAIN" && echo "Done setting up $SUBDOMAIN.$DOMAIN"
+  RECORD_VALUE="$(jsq -r "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\"))[0].value")"
+	if [ "$RECORD_VALUE" != "$MY_IPV4" ] && [ "$RECORD_VALUE" != "" ]; then
+		echo "Setting up $SUBDOMAIN.$DOMAIN"
+		delete_netlify_dns_record_by_subdomain_if_exists "$SUBDOMAIN"
+		create_netlify_dns_record "$SUBDOMAIN" && echo "Done setting up $SUBDOMAIN.$DOMAIN"
+  else
+		echo "$SUBDOMAIN.$DOMAIN is already up to date"
+  fi
 }
 
 echo "According to ifconfig.io, my IPv4 address is: $MY_IPV4"
