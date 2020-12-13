@@ -25,7 +25,7 @@ curl="curl $CURL_FLAGS"
 
 # fetch IP addresses
 MY_IPV4="$($curl -4 ifconfig.io)" || \
-	{ echo "Failed to retrieve an IPv4 address from ifconfig.io"; exit 4; }
+	{ echo "Failed to retrieve an IPv4 address from ifconfig.io"; exit 6; }
 
 # TODO: ipv6
 # MY_IPV6="$($curl -6 ifconfig.io)"
@@ -57,14 +57,14 @@ create_netlify_dns_record() {
 
 setup_netlify_dns_record() {
 	SUBDOMAIN="$1"; shift
-  RECORD_VALUE="$(jsq -r "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\"))[0].value")"
-	if [ "$RECORD_VALUE" != "$MY_IPV4" ] && [ "$RECORD_VALUE" != "" ]; then
+	RECORD_VALUE="$(jsq -r "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\"))[0].value")"
+	if [ "$RECORD_VALUE" == "$MY_IPV4" ]; then
+		echo "$SUBDOMAIN.$DOMAIN is already up to date"
+	else
 		echo "Setting up $SUBDOMAIN.$DOMAIN"
 		delete_netlify_dns_record_by_subdomain_if_exists "$SUBDOMAIN"
 		create_netlify_dns_record "$SUBDOMAIN" && echo "Done setting up $SUBDOMAIN.$DOMAIN"
-  else
-		echo "$SUBDOMAIN.$DOMAIN is already up to date"
-  fi
+	fi
 }
 
 echo "According to ifconfig.io, my IPv4 address is: $MY_IPV4"
