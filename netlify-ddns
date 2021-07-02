@@ -57,7 +57,7 @@ create_netlify_dns_records() {
 	<<< "$PAYLOAD_IPv4" $curl -d @- -H 'content-type:application/json' "$API/dns_zones/$DNS_ZONE/dns_records?access_token=$ACCESS_TOKEN" > /dev/null
 	if [ "$DO_IPV6" == "1" ]; then
 		PAYLOAD_IPv6="$(jq -n -r \
-			--arg type "A" \
+			--arg type "AAAA" \
 			--arg name "$SUBDOMAIN" \
 			--arg val  "$MY_IPV6" \
 			--arg ttl  "$TTL_SECONDS" \
@@ -74,7 +74,7 @@ setup_netlify_dns_record() {
 }
 
 echo "According to ifconfig.io, my IPv4 address is: $MY_IPV4"
-[ "$DO_IPV6" == "1"] && echo "My IPv6 address is: $MY_IPV6"
+[ "$DO_IPV6" == "1" ] && echo "My IPv6 address is: $MY_IPV6"
 for s in "${SUBDOMAINS[@]}"; do
 	# TODO: this could get cloggy if there are a lot of subdomains
 	setup_netlify_dns_record "$s" &
