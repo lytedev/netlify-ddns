@@ -1,7 +1,7 @@
 XDG_CONFIG_HOME ?= ${HOME}/.config
 
 .env: example.env
-	cp example.env .env
+	test -f .env || cp example.env .env
 	${EDITOR} .env
 
 .PHONY: run
