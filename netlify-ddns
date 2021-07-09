@@ -40,9 +40,15 @@ jsq() {
 
 delete_netlify_dns_records_by_subdomain_if_exists() {
 	SUBDOMAIN="$1"; shift
-	if jsq -e "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\"))[0]" > /dev/null; then
+	if jsq -e "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\" and .type == \"A\"))[0]" > /dev/null; then
 		RECORD_ID="$(jsq -r "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\"))[0].id")"
 		$curl -X DELETE "$API/dns_zones/$DNS_ZONE/dns_records/$RECORD_ID?access_token=$ACCESS_TOKEN" > /dev/null
+	fi
+	if [ "$DO_IPV6" == "1" ]; then
+		if jsq -e "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\" and .type == \"AAAA\"))[0]" > /dev/null; then
+			RECORD_ID="$(jsq -r "map(select(.hostname == \"$SUBDOMAIN.$DOMAIN\"))[0].id")"
+			$curl -X DELETE "$API/dns_zones/$DNS_ZONE/dns_records/$RECORD_ID?access_token=$ACCESS_TOKEN" > /dev/null
+		fi
 	fi
 }
 
