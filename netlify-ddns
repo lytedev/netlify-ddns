@@ -28,8 +28,14 @@ curl="curl $CURL_FLAGS"
 MY_IPV4="$($curl -4 ifconfig.io)" || \
 	{ echo "Failed to retrieve an IPv4 address from ifconfig.io"; exit 4; }
 if [ "$DO_IPV6" == "1" ]; then
-	MY_IPV6="$(ip -6 addr show dev eth0 | awk '/mngtmpaddr/{split($2,a,"/");print a[1]}')" || \
+	interface="$(ip link show | awk '/^[0-9]+: e.*:/' | head -n 1 | awk -F': ' '{print $2}')"
+	MY_IPV6="$(ip -6 addr show dev "$interface" | awk '/mngtmpaddr/{split($2,a,"/");print a[1]}')" || \
 		{ echo "Failed to retrieve an IPv6 address from 'ip'"; exit 5; }
+	[ -z "$MY_IPV6" ] && {
+		export DO_IPV6="0"
+		echo "Failed to retrieve a non-blank IPv6 address from 'ip'"
+		exit 6
+	}
 fi
 
 # fetch current netlify DNS state
